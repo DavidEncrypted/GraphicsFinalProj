@@ -5,8 +5,9 @@
 RenderData::RenderData() : cameraposition(1.0f, 0.0f, 0.0f), camerarotation((float)M_PI, 0.0f, 0.0f)
 {}
 
-bool RenderData::loadSkyboxTexture(const std::vector<std::string> & facefilenames){
-	skyboxtextureid = texturemanager.loadCubemap(facefilenames);
+bool RenderData::loadSkybox(const std::vector<std::string> & facefilenames){
+	sb = Skybox();
+	sb.id = texturemanager.loadCubemap(facefilenames);
 
 	// TODO VAO en VBOs
 

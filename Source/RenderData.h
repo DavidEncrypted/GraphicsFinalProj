@@ -1,6 +1,11 @@
 #pragma once
 #include "TextureManager.h"
 
+struct Skybox
+{
+	GLuint id;
+
+};
 
 struct Material
 {
@@ -31,7 +36,7 @@ class RenderData
 public:
 	RenderData();
 
-	bool loadSkyboxTexture(const std::vector<std::string> & facefilenames);
+	bool loadSkybox(const std::vector<std::string> & facefilenames);
 
 	bool loadModel(const std::string & modelfile);
 
@@ -39,7 +44,7 @@ public:
 
 	bool setCamera(const std::string & description);
 
-	GLuint getSkyboxTexture() {return skyboxtextureid;}
+	GLuint getSkybox() {return skyboxtextureid;}
 
 	size_t getNumMeshes() const;
 	Mesh & getMesh(size_t i);
@@ -55,7 +60,7 @@ public:
 private:
 	TextureManager texturemanager;
 
-	GLuint skyboxtextureid;
+	Skybox sb;
 
 	std::vector<Mesh> meshes;
 	std::vector<Material> materials;
