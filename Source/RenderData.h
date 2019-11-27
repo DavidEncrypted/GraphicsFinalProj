@@ -3,8 +3,7 @@
 
 struct Skybox
 {
-	GLuint id;
-
+	GLuint id, vao, vbo;
 };
 
 struct Material
@@ -44,7 +43,7 @@ public:
 
 	bool setCamera(const std::string & description);
 
-	GLuint getSkybox() {return skyboxtextureid;}
+	Skybox & getSkybox() {return sb;}
 
 	size_t getNumMeshes() const;
 	Mesh & getMesh(size_t i);
@@ -68,6 +67,8 @@ private:
 
 	Vector4 cameraposition;
 	Vector4 camerarotation;
+
+
 
 	unsigned char readByte(std::ifstream & file);
 	int readInt(std::ifstream & file);

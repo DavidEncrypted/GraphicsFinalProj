@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-Wall -g `sdl-config --cflags`
+CFLAGS=-Wall -g -std=c++14 `sdl-config --cflags`
 LDFLAGS=-lGL -lGLU -lGLEW -lSDL -lpng -lz
 SOURCES=main.cpp InputHandler.cpp RenderContext.cpp RenderData.cpp Renderer.cpp geometry.cpp ShaderProgram.cpp TextureManager.cpp
 OBJECTS=$(SOURCES:.cpp=.o)

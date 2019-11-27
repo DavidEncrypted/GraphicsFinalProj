@@ -37,10 +37,12 @@ private:
 	// Shaders
 	ShaderProgram usershader;
 	ShaderProgram tonemapshader;
+	ShaderProgram skyboxshader;
 
 	// Matrices
 	Matrix4 matprojection;
 	Matrix4 matmodelview;
+	Matrix4 rotmodelview;
 
 	// Time value
 	float time;

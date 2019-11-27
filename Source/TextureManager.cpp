@@ -48,7 +48,7 @@ GLuint TextureManager::loadCubemap(std::vector<std::string> faces)
     	unsigned char * data;
 		png_uint_32 width, height;
 		GLint format;
-		if (readPNGdata("Models/Textures/" + faces[i], false, data, width, height, format))
+		if (readPNGdata("Models/Textures/" + faces[i], true, data, width, height, format))
         {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
             //stbi_image_free(data);
@@ -176,5 +176,6 @@ bool TextureManager::readPNGdata(const std::string filename, bool adjustgamma, u
 
 	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 	format = (colortype == PNG_COLOR_TYPE_RGB) ? GL_RGB : GL_RGBA;
+	//for (int i = 0; i < 100; i++) std::cerr << data[i];
 	return true;
 }

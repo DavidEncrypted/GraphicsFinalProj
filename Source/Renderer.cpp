@@ -46,6 +46,12 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 		return false;
 	}
 	
+	if (!skyboxshader.loadShaderProgram("skybox", false))
+	{
+		std::cerr << skyboxshader.getErrorMessage() << std::endl;
+		return false;
+	}
+
 	const float quaddata[12] =
 	{ -1.0f, -1.0f,
 	   1.0f, -1.0f,
@@ -107,11 +113,11 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 	}
 	file.close();
 
-	std::vector<std::string> faces = {"skybox_down.png", "skybox_back.png", "skybox_up.png",
-									  "skybox_right.png", "skybox_front.png", "skybox_left.png"};
+	std::vector<std::string> faces = {"skybox_front.png", "skybox_right.png",
+									  "skybox_left.png", "skybox_back.png","skybox_up.png",  "skybox_down.png"};
 
-	renderdata.loadSkyboxTexture(faces);
-
+	renderdata.loadSkybox(faces);
+	//std::cerr << "Skyboxid: " << renderdata.getSkybox().id << std::endl;
 	return true;
 }
 
@@ -144,23 +150,48 @@ void Renderer::render()
 
 	const Vector4 & cameraposition = renderdata.getCameraPosition();
 	const Vector4 & camerarotation = renderdata.getCameraRotation();
+	const Vector4 emptyposition = Vector4(0.0f,0.0f,0.0f,0.0f);
 
 	matprojection = Matrix4::PerspectiveMatrix((float)M_PI_4, (float)rendersizex / (float)rendersizey, 0.1f, 1000.0f);
 	matmodelview = Matrix4::LookAtMatrix(cameraposition, camerarotation);
+	rotmodelview = Matrix4::LookAtMatrix(emptyposition, camerarotation);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fboms);
+
+	
+	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f); 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
+
 	glUseProgram(usershader.getProgram());
 	
 	drawUserModelDepth();
 	
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	
-	
 	drawUserModel();
+
+	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
+	glDisable(GL_DEPTH_TEST);
+	
+	glUseProgram(skyboxshader.getProgram());
+	
+	drawSkybox();
+	
+	glEnable(GL_DEPTH_TEST);
+
+	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	//glUseProgram(usershader.getProgram());
+
+	//
+
+
+
+
+
+
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
@@ -176,10 +207,41 @@ void Renderer::render()
 
 	drawScreenQuad();
 
-	drawSkybox();
+	
 }
 
 void Renderer::drawSkybox(){
+
+	
+	
+	// ... set view and projection matrix
+	glUniformMatrix4fv(glGetUniformLocation(skyboxshader.getProgram(), "matmodelview"), 1, GL_TRUE, rotmodelview.elements());
+	glUniformMatrix4fv(glGetUniformLocation(skyboxshader.getProgram(), "matprojection"), 1, GL_TRUE, matprojection.elements());
+	
+	
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, renderdata.getSkybox().vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+	glBindVertexArray(renderdata.getSkybox().vao);
+
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, renderdata.getSkybox().id);
+	glUniform1i(glGetUniformLocation(skyboxshader.getProgram(), "skybox"), 0);
+
+	
+
+
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	glBindVertexArray(0);
+	
+
+	glDisableVertexAttribArray(0);
+	glActiveTexture(0);
 
 }
 
@@ -243,6 +305,7 @@ void Renderer::drawUserModelDepth()
 
 void Renderer::drawUserModel()
 {
+	
 	size_t i, j;
 	
 	glUniformMatrix4fv(glGetUniformLocation(usershader.getProgram(), "matmodelview"), 1, GL_TRUE, matmodelview.elements());
@@ -254,19 +317,20 @@ void Renderer::drawUserModel()
 
 	for (i = 0; i < renderdata.getNumMeshes(); ++i)
 	{
+		
 		glUniform3fv(glGetUniformLocation(usershader.getProgram(), "material_diffuse"), 1, renderdata.getMesh(i).material->diffuse.elements());
 		glUniform3fv(glGetUniformLocation(usershader.getProgram(), "material_specular"), 1, renderdata.getMesh(i).material->specular.elements());
 		glUniform1fv(glGetUniformLocation(usershader.getProgram(), "material_shininess"), 1, &renderdata.getMesh(i).material->specularlevel);
 		glUniform1fv(glGetUniformLocation(usershader.getProgram(), "material_glossiness"), 1, &renderdata.getMesh(i).material->glossiness);
 		
-		glActiveTexture(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, renderdata.getMesh(i).material->texdiffuse);
-		glUniform1i(glGetUniformLocation(usershader.getProgram(), "material_diffuse_map"), 0);
+		glUniform1i(glGetUniformLocation(usershader.getProgram(), "material_diffuse_map"), 4);
 		glUniform1i(glGetUniformLocation(usershader.getProgram(), "material_diffuse_usemap"), renderdata.getMesh(i).material->texdiffuse);
 
-		glActiveTexture(GL_TEXTURE1);
+		glActiveTexture(GL_TEXTURE5);
 		glBindTexture(GL_TEXTURE_2D, renderdata.getMesh(i).material->texbump);
-		glUniform1i(glGetUniformLocation(usershader.getProgram(), "material_normal_map"), 1);
+		glUniform1i(glGetUniformLocation(usershader.getProgram(), "material_normal_map"), 5);
 		glUniform1i(glGetUniformLocation(usershader.getProgram(), "material_normal_usemap"), renderdata.getMesh(i).material->texbump);
 
 		//enable position
@@ -307,14 +371,19 @@ void Renderer::drawUserModel()
 			glDrawElements(GL_TRIANGLES, 3 * renderdata.getMesh(i).numfaces, GL_UNSIGNED_INT, 0);
 		}
 		
-		glDisableVertexAttribArray(0);
+		
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(2);
 		glDisableVertexAttribArray(3);
 		glDisableVertexAttribArray(4);
+		
+		glDisableVertexAttribArray(0);
+		
 	}
 	
 	glActiveTexture(GL_TEXTURE0);
+
+	
 }
 
 
