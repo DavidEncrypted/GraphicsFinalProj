@@ -113,8 +113,8 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 	}
 	file.close();
 
-	std::vector<std::string> faces = {"skybox_front.png", "skybox_right.png",
-									  "skybox_left.png", "skybox_back.png","skybox_up.png",  "skybox_down.png"};
+	std::vector<std::string> faces = {"rainbow_ft.png", "rainbow_rt.png",
+									  "rainbow_lf.png", "rainbow_bk.png","rainbow_up.png",  "rainbow_dn.png"};
 
 	renderdata.loadSkybox(faces);
 	//std::cerr << "Skyboxid: " << renderdata.getSkybox().id << std::endl;
@@ -173,13 +173,13 @@ void Renderer::render()
 
 	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
-	glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_DEPTH_TEST);
 	
 	glUseProgram(skyboxshader.getProgram());
 	
 	drawSkybox();
 	
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 
 	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	//glUseProgram(usershader.getProgram());
