@@ -1,7 +1,6 @@
 #include "global.h"
 #include "RenderData.h"
 
-
 RenderData::RenderData() : cameraposition(1.0f, 0.0f, 0.0f), camerarotation((float)M_PI, 0.0f, 0.0f)
 {}
 
@@ -11,8 +10,7 @@ bool RenderData::loadSkybox(const std::vector<std::string> & facefilenames){
 	sb = Skybox();
 	sb.id = texturemanager.loadCubemap(facefilenames);
 
-	// TODO VAO en VBOs
-	float skyboxVertices[] = {
+	const float skyboxVertices[] = {
 	    // positions          
 	    -1.0f,  1.0f, -1.0f,
 	    -1.0f, -1.0f, -1.0f,
@@ -56,6 +54,7 @@ bool RenderData::loadSkybox(const std::vector<std::string> & facefilenames){
 	    -1.0f, -1.0f,  1.0f,
 	     1.0f, -1.0f,  1.0f
 	};
+	
 
 	// skybox VAO
     GLuint skyboxVAO, skyboxVBO;
@@ -64,11 +63,40 @@ bool RenderData::loadSkybox(const std::vector<std::string> & facefilenames){
     glBindVertexArray(skyboxVAO);
     glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(6);
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glDisableVertexAttribArray(6);
+    glDisableVertexAttribArray(0);
     sb.vao = skyboxVAO;
     sb.vbo = skyboxVBO;
+	return true;
+}
+
+bool RenderData::loadBillboard(const std::string & texturename){
+	bb = Billboard();
+	GLuint texid = texturemanager.loadTexture("Models/Textures/" + texturename, false);
+	std::cerr << "Loaded texid: " << texid << std::endl;
+	bb.textureid = texid;
+
+
+	// The VBO containing the 4 vertices of the particles.
+	static const GLfloat g_vertex_buffer_data[] = { 
+		 -0.5f, -0.5f, 0.0f,
+		  0.5f, -0.5f, 0.0f,
+		 -0.5f,  0.5f, 0.0f,
+		  0.5f,  0.5f, 0.0f,
+	};
+	GLuint billboard_vertex_buffer;
+	//GLuint billboard_vertex_array;
+	//glGenVertexArrays(1, &billboard_vertex_array);
+	glGenBuffers(1, &billboard_vertex_buffer);
+	//glBindVertexArray(billboard_vertex_array);
+	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glDisableVertexAttribArray(0);
+	bb.vbo = billboard_vertex_buffer;
+	//bb.vao = billboard_vertex_array;
 	return true;
 }
 
@@ -355,7 +383,7 @@ void RenderData::updateCamera(bool forward, bool backward, bool left, bool right
 		dir = dir.normalize() * ((float)deltatime * 0.025f);
 
 	camerarotation.z() -= (float)turnright * 0.01f;
-	camerarotation.y() -= (float)turnright * 0.01f;
+	camerarotation.y() -= (float)turndown * 0.01f;
 	if (camerarotation.y() >= M_PI_2)
 		camerarotation.y() = (float)M_PI_2 - 0.0001f;
 	if (camerarotation.y() <= -M_PI_2)
@@ -366,6 +394,9 @@ void RenderData::updateCamera(bool forward, bool backward, bool left, bool right
 		camerarotation.z() += (float)M_PI * 2.0f;
 
 	cameraposition = cameraposition.rotate(Vector4(0, 0, -(float)turnright * 0.01f));
+	cameraposition = cameraposition.rotate(Vector4(-(float)turndown * 0.01f, 0 	, 0));
+	//cameraposition = cameraposition.rotate(Vector4(0, 0, -(float)turnright * 0.01f));
+	
 	cameraposition += dir.rotate(camerarotation);
 }
 

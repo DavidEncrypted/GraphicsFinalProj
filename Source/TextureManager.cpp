@@ -31,7 +31,7 @@ GLuint TextureManager::loadTexture(const std::string & filename, bool adjustgamm
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	textures.push_back(newtexture);
-
+	std::cerr << "Created texid: " << newtexture.texid << std::endl;
 	return newtexture.texid;
 }
 

@@ -52,6 +52,12 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 		return false;
 	}
 
+	if (!billboardshader.loadShaderProgram("billboard", false))
+	{
+		std::cerr << billboardshader.getErrorMessage() << std::endl;
+		return false;
+	}
+
 	const float quaddata[12] =
 	{ -1.0f, -1.0f,
 	   1.0f, -1.0f,
@@ -113,10 +119,11 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 	}
 	file.close();
 
-	std::vector<std::string> faces = {"rainbow_ft.png", "rainbow_rt.png",
-									  "rainbow_lf.png", "rainbow_bk.png","rainbow_up.png",  "rainbow_dn.png"};
+	std::vector<std::string> faces = {"rainbow_bk.png", "rainbow_ft.png" , "rainbow_lf.png",
+									   "rainbow_rt.png","rainbow_up.png",  "rainbow_dn.png"};
 
 	renderdata.loadSkybox(faces);
+	renderdata.loadBillboard("billboard.png");
 	//std::cerr << "Skyboxid: " << renderdata.getSkybox().id << std::endl;
 	return true;
 }
@@ -171,6 +178,9 @@ void Renderer::render()
 
 	drawUserModel();
 
+	glUseProgram(billboardshader.getProgram());
+	drawBillboard();
+
 	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
 	//glDisable(GL_DEPTH_TEST);
@@ -208,6 +218,65 @@ void Renderer::render()
 	drawScreenQuad();
 
 	
+}
+
+void Renderer::drawBillboard(){
+	glEnableVertexAttribArray(0);
+	// ... set view and projection matrix
+	glUniformMatrix4fv(glGetUniformLocation(billboardshader.getProgram(), "matmodelview"), 1, GL_TRUE, matmodelview.elements());
+	glUniformMatrix4fv(glGetUniformLocation(billboardshader.getProgram(), "matprojection"), 1, GL_TRUE, matprojection.elements());
+	
+
+	GLuint id = renderdata.getBillboard().textureid;
+
+
+	// Bind our texture in Texture Unit 0
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, id);
+	// Set our "myTextureSampler" sampler to use Texture Unit 0
+	glUniform1i(glGetUniformLocation(billboardshader.getProgram(), "billboardTextureSampler"), 0);
+	// This is the only interesting part of the tutorial.
+	// This is equivalent to mlutiplying (1,0,0) and (0,1,0) by inverse(ViewMatrix).
+	// ViewMatrix is orthogonal (it was made this way), 
+	// so its inverse is also its transpose, 
+	// and transposing a matrix is "free" (inversing is slooow)
+	Vector4 rightvector = matmodelview.RightVector();
+	Vector4 upvector = matmodelview.UpVector();
+	std::cerr << "right: " << rightvector.x() << " " << rightvector.y() << " " << rightvector.z() << std::endl;
+	std::cerr << "up: " << upvector.x() << " " << upvector.y() << " " << upvector.z() << std::endl;
+
+	glUniform3f(glGetUniformLocation(billboardshader.getProgram(), "CameraRight_worldspace"), rightvector.x(), rightvector.y(), rightvector.z());
+	glUniform3f(glGetUniformLocation(billboardshader.getProgram(), "CameraUp_worldspace"), upvector.x(), upvector.y(), upvector.z());
+	//glUniform3f(glGetUniformLocation(billboardshader.getProgram(), "CameraUp_worldspace"), -0.949233, -0.0925417, 0.300653);
+	
+	glUniform3f(glGetUniformLocation(billboardshader.getProgram(), "BillboardPos"), 0.0f, 11.0f, 0.0f); // The billboard will be just above the cube
+	glUniform2f(glGetUniformLocation(billboardshader.getProgram(), "BillboardSize"), 40.2f, 10.20f);
+
+
+	//glUniformMatrix4fv(ViewProjMatrixID, 1, GL_FALSE, &ViewProjectionMatrix[0][0]);
+
+	// 1rst attribute buffer : vertices
+	
+	glBindBuffer(GL_ARRAY_BUFFER, renderdata.getBillboard().vbo);
+	glVertexAttribPointer(
+		0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+		3,                  // size
+		GL_FLOAT,           // type
+		GL_FALSE,           // normalized?
+		0,                  // stride
+		(void*)0            // array buffer offset
+	);
+
+
+	//glBindVertexArray(renderdata.getBillboard().vao);
+	//std::cerr << "texid: " << id << " vbo: " << renderdata.getBillboard().vbo << std::endl;
+
+	// Draw the billboard !
+	// This draws a triangle_strip which looks like a quad.
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glDisableVertexAttribArray(0);
+
 }
 
 void Renderer::drawSkybox(){

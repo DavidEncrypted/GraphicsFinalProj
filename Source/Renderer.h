@@ -38,6 +38,7 @@ private:
 	ShaderProgram usershader;
 	ShaderProgram tonemapshader;
 	ShaderProgram skyboxshader;
+	ShaderProgram billboardshader;
 
 	// Matrices
 	Matrix4 matprojection;
@@ -48,6 +49,7 @@ private:
 	float time;
 
 	void drawSkybox();
+	void drawBillboard();
 	void drawScreenQuad();
 	void drawUserModel();
 	void drawUserModelDepth();

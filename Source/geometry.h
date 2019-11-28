@@ -69,6 +69,10 @@ public:
 
 	static Matrix4 PerspectiveMatrix(float fovy, float aspect, float znear, float zfar);
 
+	Vector4 RightVector();
+	Vector4 UpVector();
+	Vector4 ForwardVector();
+
 private:
 	float e[16];
 };

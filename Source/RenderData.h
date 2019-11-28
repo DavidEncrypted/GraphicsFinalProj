@@ -6,6 +6,11 @@ struct Skybox
 	GLuint id, vao, vbo;
 };
 
+struct Billboard
+{
+	GLuint textureid, vao, vbo;
+};
+
 struct Material
 {
 	Vector4 diffuse, specular;
@@ -37,6 +42,8 @@ public:
 
 	bool loadSkybox(const std::vector<std::string> & facefilenames);
 
+	bool loadBillboard(const std::string & texturename);
+
 	bool loadModel(const std::string & modelfile);
 
 	bool addLight(const std::string & description);
@@ -44,6 +51,8 @@ public:
 	bool setCamera(const std::string & description);
 
 	Skybox & getSkybox() {return sb;}
+
+	Billboard & getBillboard() {return bb;}
 
 	size_t getNumMeshes() const;
 	Mesh & getMesh(size_t i);
@@ -56,10 +65,14 @@ public:
 
 	void updateCamera(bool forward, bool backward, bool left, bool right, int turnright, int turndown, int deltatime);
 
+
+
 private:
 	TextureManager texturemanager;
 
 	Skybox sb;
+
+	Billboard bb;
 
 	std::vector<Mesh> meshes;
 	std::vector<Material> materials;
@@ -82,4 +95,6 @@ private:
 	void readPoint2(std::ifstream & file, float * point2);
 	void readPoint3(std::ifstream & file, float * point3);
 	void readIndex3(std::ifstream & file, unsigned int * index3);
+
+	
 };
