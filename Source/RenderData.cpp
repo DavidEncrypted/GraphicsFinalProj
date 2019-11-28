@@ -63,9 +63,7 @@ bool RenderData::loadSkybox(const std::vector<std::string> & facefilenames){
     glBindVertexArray(skyboxVAO);
     glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glDisableVertexAttribArray(0);
+
     sb.vao = skyboxVAO;
     sb.vbo = skyboxVBO;
 	return true;
@@ -86,17 +84,17 @@ bool RenderData::loadBillboard(const std::string & texturename){
 		  0.5f,  0.5f, 0.0f,
 	};
 	GLuint billboard_vertex_buffer;
-	//GLuint billboard_vertex_array;
-	//glGenVertexArrays(1, &billboard_vertex_array);
 	glGenBuffers(1, &billboard_vertex_buffer);
-	//glBindVertexArray(billboard_vertex_array);
 	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    glDisableVertexAttribArray(0);
 	bb.vbo = billboard_vertex_buffer;
-	//bb.vao = billboard_vertex_array;
+
+
+
+
+	particles = Particles();
+	//particles.printparticles();
+
 	return true;
 }
 

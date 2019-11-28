@@ -4,7 +4,7 @@
 class ShaderProgram
 {
 public:	
-	bool loadShaderProgram(const std::string & name, bool modelinput);
+	bool loadShaderProgram(const std::string & name, bool modelinput, bool particleshader);
 	const GLuint & getProgram() const;
 
 	const std::string & getErrorMessage() const;

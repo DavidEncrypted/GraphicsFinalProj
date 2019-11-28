@@ -265,16 +265,16 @@ Matrix4 Matrix4::PerspectiveMatrix(float fovy, float aspect, float znear, float 
 }
 
 Vector4 Matrix4::RightVector(){
-	Vector4 vec = Vector4(e[0], e[4], e[8]);
+	Vector4 vec = Vector4(e[0], e[1], e[2]);
 	return vec;
 }
 
 Vector4 Matrix4::UpVector(){
-	Vector4 vec = Vector4(e[1], e[5], e[9]);
+	Vector4 vec = Vector4(e[4], e[5], e[6]);
  	return vec;
 }
 
 Vector4 Matrix4::ForwardVector(){
-	Vector4 vec = Vector4(e[2], e[6], e[10]);
+	Vector4 vec = Vector4(e[8], e[9], e[10]);
 	return vec;
 }

@@ -1,6 +1,12 @@
 #pragma once
 #include "TextureManager.h"
 
+#include "Particles.h"
+
+#ifndef MaxParticles
+#define MaxParticles 20000
+#endif
+
 struct Skybox
 {
 	GLuint id, vao, vbo;
@@ -54,6 +60,8 @@ public:
 
 	Billboard & getBillboard() {return bb;}
 
+	Particles & getParticles() {return particles;}
+
 	size_t getNumMeshes() const;
 	Mesh & getMesh(size_t i);
 
@@ -64,14 +72,14 @@ public:
 	const Vector4 & getCameraRotation();
 
 	void updateCamera(bool forward, bool backward, bool left, bool right, int turnright, int turndown, int deltatime);
-
+	//void updateParticles(float delta, Vector4 CameraPosition){particles.Update(delta,CameraPosition);}
 
 
 private:
 	TextureManager texturemanager;
-
+	
+	Particles particles;
 	Skybox sb;
-
 	Billboard bb;
 
 	std::vector<Mesh> meshes;
@@ -81,6 +89,7 @@ private:
 	Vector4 cameraposition;
 	Vector4 camerarotation;
 
+	
 
 
 	unsigned char readByte(std::ifstream & file);

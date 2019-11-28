@@ -3,8 +3,9 @@
 #include "ShaderProgram.h"
 #include "RenderData.h"
 #include "Skybox.h"
-
-
+#ifndef MaxParticles
+#define MaxParticles 20000
+#endif
 class Renderer
 {
 public:
@@ -47,9 +48,11 @@ private:
 
 	// Time value
 	float time;
+	float prevtime;
+	float delta;
 
 	void drawSkybox();
-	void drawBillboard();
+	void drawBillboard(int ParticlesCount);
 	void drawScreenQuad();
 	void drawUserModel();
 	void drawUserModelDepth();

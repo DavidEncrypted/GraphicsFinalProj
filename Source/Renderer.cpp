@@ -40,19 +40,19 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 	}
 	glViewport(0, 0, rendersizex, rendersizey);
 
-	if (!tonemapshader.loadShaderProgram("tonemap", false))
+	if (!tonemapshader.loadShaderProgram("tonemap", false, false))
 	{
 		std::cerr << tonemapshader.getErrorMessage() << std::endl;
 		return false;
 	}
 	
-	if (!skyboxshader.loadShaderProgram("skybox", false))
+	if (!skyboxshader.loadShaderProgram("skybox", false, false))
 	{
 		std::cerr << skyboxshader.getErrorMessage() << std::endl;
 		return false;
 	}
 
-	if (!billboardshader.loadShaderProgram("billboard", false))
+	if (!billboardshader.loadShaderProgram("billboard", false, true))
 	{
 		std::cerr << billboardshader.getErrorMessage() << std::endl;
 		return false;
@@ -80,7 +80,7 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 
 		if (line.substr(0, 6) == "Shader")
 		{
-			if (!usershader.loadShaderProgram(line.substr(7), true))
+			if (!usershader.loadShaderProgram(line.substr(7), true, false))
 			{
 				std::cerr << usershader.getErrorMessage() << std::endl;
 				return false;
@@ -124,6 +124,7 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 
 	renderdata.loadSkybox(faces);
 	renderdata.loadBillboard("billboard.png");
+	renderdata.getParticles().loadParticles();
 	//std::cerr << "Skyboxid: " << renderdata.getSkybox().id << std::endl;
 	return true;
 }
@@ -154,6 +155,8 @@ bool Renderer::resize(int rendersizex, int rendersizey)
 void Renderer::render()
 {
 	time = (float)SDL_GetTicks() / 1000.0f;
+	delta = time - prevtime;
+	prevtime = time;
 
 	const Vector4 & cameraposition = renderdata.getCameraPosition();
 	const Vector4 & camerarotation = renderdata.getCameraRotation();
@@ -162,6 +165,8 @@ void Renderer::render()
 	matprojection = Matrix4::PerspectiveMatrix((float)M_PI_4, (float)rendersizex / (float)rendersizey, 0.1f, 1000.0f);
 	matmodelview = Matrix4::LookAtMatrix(cameraposition, camerarotation);
 	rotmodelview = Matrix4::LookAtMatrix(emptyposition, camerarotation);
+
+	int ParticlesCount = renderdata.getParticles().Update(delta,cameraposition);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fboms);
 
@@ -172,14 +177,14 @@ void Renderer::render()
 
 	glUseProgram(usershader.getProgram());
 	
-	drawUserModelDepth();
+	//drawUserModelDepth();
 	
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	drawUserModel();
+	//drawUserModel();
 
 	glUseProgram(billboardshader.getProgram());
-	drawBillboard();
+	drawBillboard(ParticlesCount);
 
 	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
@@ -220,13 +225,33 @@ void Renderer::render()
 	
 }
 
-void Renderer::drawBillboard(){
-	glEnableVertexAttribArray(0);
+void Renderer::drawBillboard(int ParticlesCount){
+	
+
+	Particles par = renderdata.getParticles();
+
+	// Particle stuff
+	glBindBuffer(GL_ARRAY_BUFFER, par.getPositionVBO());
+	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
+	glBufferSubData(GL_ARRAY_BUFFER, 0, ParticlesCount * sizeof(GLfloat) * 4, par.getParticlePositionPtr());
+
+	glBindBuffer(GL_ARRAY_BUFFER, par.getColorVBO());
+	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
+	glBufferSubData(GL_ARRAY_BUFFER, 0, ParticlesCount * sizeof(GLubyte) * 4, par.getParticleColorPtr());
+
+
+
+
+
+
+
+
+	// Billboard stuff
+	
 	// ... set view and projection matrix
 	glUniformMatrix4fv(glGetUniformLocation(billboardshader.getProgram(), "matmodelview"), 1, GL_TRUE, matmodelview.elements());
 	glUniformMatrix4fv(glGetUniformLocation(billboardshader.getProgram(), "matprojection"), 1, GL_TRUE, matprojection.elements());
 	
-
 	GLuint id = renderdata.getBillboard().textureid;
 
 
@@ -242,21 +267,15 @@ void Renderer::drawBillboard(){
 	// and transposing a matrix is "free" (inversing is slooow)
 	Vector4 rightvector = matmodelview.RightVector();
 	Vector4 upvector = matmodelview.UpVector();
-	std::cerr << "right: " << rightvector.x() << " " << rightvector.y() << " " << rightvector.z() << std::endl;
-	std::cerr << "up: " << upvector.x() << " " << upvector.y() << " " << upvector.z() << std::endl;
+	//std::cerr << "right: " << rightvector.x() << " " << rightvector.y() << " " << rightvector.z() << std::endl;
+	//std::cerr << "up: " << upvector.x() << " " << upvector.y() << " " << upvector.z() << std::endl;
 
 	glUniform3f(glGetUniformLocation(billboardshader.getProgram(), "CameraRight_worldspace"), rightvector.x(), rightvector.y(), rightvector.z());
 	glUniform3f(glGetUniformLocation(billboardshader.getProgram(), "CameraUp_worldspace"), upvector.x(), upvector.y(), upvector.z());
-	//glUniform3f(glGetUniformLocation(billboardshader.getProgram(), "CameraUp_worldspace"), -0.949233, -0.0925417, 0.300653);
 	
-	glUniform3f(glGetUniformLocation(billboardshader.getProgram(), "BillboardPos"), 0.0f, 11.0f, 0.0f); // The billboard will be just above the cube
-	glUniform2f(glGetUniformLocation(billboardshader.getProgram(), "BillboardSize"), 40.2f, 10.20f);
-
-
-	//glUniformMatrix4fv(ViewProjMatrixID, 1, GL_FALSE, &ViewProjectionMatrix[0][0]);
 
 	// 1rst attribute buffer : vertices
-	
+	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, renderdata.getBillboard().vbo);
 	glVertexAttribPointer(
 		0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
@@ -267,15 +286,46 @@ void Renderer::drawBillboard(){
 		(void*)0            // array buffer offset
 	);
 
+	
+	
 
-	//glBindVertexArray(renderdata.getBillboard().vao);
-	//std::cerr << "texid: " << id << " vbo: " << renderdata.getBillboard().vbo << std::endl;
+	// 2nd attribute buffer : positions of particles' centers
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, par.getPositionVBO());
+	glVertexAttribPointer(
+		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		4,                                // size : x + y + z + size => 4
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+	);
 
-	// Draw the billboard !
-	// This draws a triangle_strip which looks like a quad.
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	// 3rd attribute buffer : particles' colors
+	glEnableVertexAttribArray(2);
+	glBindBuffer(GL_ARRAY_BUFFER, par.getColorVBO());
+	glVertexAttribPointer(
+		2,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		4,                                // size : r + g + b + a => 4
+		GL_UNSIGNED_BYTE,                 // type
+		GL_TRUE,                          // normalized?    *** YES, this means that the unsigned char[4] will be accessible with a vec4 (floats) in the shader ***
+		0,                                // stride
+		(void*)0                          // array buffer offset
+	);
+
+
+	glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
+	glVertexAttribDivisor(1, 1); // positions : one per quad (its center)                 -> 1
+	glVertexAttribDivisor(2, 1); // color : one per quad                                  -> 1
+
+
+
+	glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, ParticlesCount);
 
 	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
+
 
 }
 

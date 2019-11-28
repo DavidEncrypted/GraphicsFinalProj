@@ -3,7 +3,7 @@
 
 
 
-bool ShaderProgram::loadShaderProgram(const std::string & name, bool modelinput)
+bool ShaderProgram::loadShaderProgram(const std::string & name, bool modelinput, bool particleshader)
 {
 	GLint result, size = 0;
 	const size_t infosize = 2048;
@@ -27,6 +27,11 @@ bool ShaderProgram::loadShaderProgram(const std::string & name, bool modelinput)
 		glBindAttribLocation(p, 2, "in_tangent");
 		glBindAttribLocation(p, 3, "in_bitangent");
 		glBindAttribLocation(p, 4, "in_texcoord");
+	}
+	else if (particleshader){
+		glBindAttribLocation(p, 0, "in_position");
+		glBindAttribLocation(p, 1, "xyzs");
+		glBindAttribLocation(p, 2, "color");
 	}
 	else
 	{
