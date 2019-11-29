@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef MaxParticles
-#define MaxParticles 20000
+#define MaxParticles 60000
 #endif
 
 struct Particle{
@@ -26,6 +26,10 @@ public:
 	void loadParticles();
 	int FindUnusedParticle();
 	void SortParticles();
+
+
+	int Explosion(Vector4 location, int NumParticles);
+	int Canon(int delta);
 	int Update(float delta, Vector4 CameraPosition);
 
 	GLuint getPositionVBO(){return particles_position_buffer;}
@@ -42,7 +46,7 @@ private:
 	GLfloat* g_particle_position_size_data;
 	GLubyte* g_particle_color_data;
 
-	Particle ParticlesContainer[MaxParticles];
+	Particle* ParticlesContainer;
 	int LastUsedParticle = 0;
 	
 };

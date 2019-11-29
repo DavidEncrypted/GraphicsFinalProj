@@ -2,9 +2,8 @@
 #include "RenderContext.h"
 #include "ShaderProgram.h"
 #include "RenderData.h"
-#include "Skybox.h"
 #ifndef MaxParticles
-#define MaxParticles 20000
+#define MaxParticles 60000
 #endif
 class Renderer
 {

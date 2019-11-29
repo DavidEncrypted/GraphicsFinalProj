@@ -18,8 +18,8 @@ private:
 	GLuint skyboxtexture;
 	Texture * getTexture(const std::string & filename);
 	
-
+	void  rotateonce(unsigned char *&data, png_uint_32 height,  png_uint_32 width, png_byte channels, int rowsize) const;
 	bool loadTextureData(const Texture & texture, bool adjustgamma) const;
-	bool readPNGdata(const std::string filename, bool adjustgamma, unsigned char *&data, png_uint_32 & width, png_uint_32 & height, GLint & format) const;
+	bool readPNGdata(const std::string filename, bool adjustgamma, unsigned char *&data, png_uint_32 & width, png_uint_32 & height, GLint & format, int rotatenum) const;
 
 };

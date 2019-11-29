@@ -44,11 +44,21 @@ GLuint TextureManager::loadCubemap(std::vector<std::string> faces)
     //int width, height, nrChannels;
     for (unsigned int i = 0; i < faces.size(); i++)
     {
+    	int numrots;
+    	if (i == 0) numrots = 1;
+    	if (i == 1) numrots = 3;
+    	if (i == 2) numrots = 0;
+    	if (i == 3) numrots = 2;
+    	if (i == 4) numrots = 3;
+    	if (i == 5) numrots = 3;
+    	
+
+
 
     	unsigned char * data;
 		png_uint_32 width, height;
 		GLint format;
-		if (readPNGdata("Models/Textures/" + faces[i], true, data, width, height, format))
+		if (readPNGdata("Models/Textures/Skybox/" + faces[i], true, data, width, height, format, numrots))
         {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
             //stbi_image_free(data);
@@ -92,7 +102,7 @@ bool TextureManager::loadTextureData(const Texture & texture, bool adjustgamma) 
 	unsigned char * data;
 	png_uint_32 width, height;
 	GLint format;
-	if (!readPNGdata(texture.name, adjustgamma, data, width, height, format))
+	if (!readPNGdata(texture.name, adjustgamma, data, width, height, format, 0))
 		return false;
 
 	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
@@ -102,7 +112,71 @@ bool TextureManager::loadTextureData(const Texture & texture, bool adjustgamma) 
 	return true;
 }
 
-bool TextureManager::readPNGdata(const std::string filename, bool adjustgamma, unsigned char *&data, png_uint_32 & width, png_uint_32 & height, GLint & format) const
+void TextureManager::rotateonce(unsigned char *&data, png_uint_32 height,  png_uint_32 width, png_byte channels, int rowsize) const{
+	int stepsize = rowsize / width;
+	std::cerr << "height: " << height << std::endl;
+	std::cerr << "width: " << width << std::endl;
+	std::cerr << "stepsize: " << stepsize << std::endl;
+	std::cerr << "rowsize: " << rowsize << std::endl;
+
+	int N = height;
+
+
+	// mat[x][y] === data[y * (x*stepsize)]
+	//	
+	// data[y * (rowsize) + (x*stepsize)] = data[y * (x*stepsize)]
+	// data[y * (x*stepsize) + 1] = data[y * (x*stepsize) + 1]
+	// data[y * (x*stepsize) + 2] = data[y * (x*stepsize) + 2]
+	// data[y * (x*stepsize) + 3] = data[y * (x*stepsize) + 3]
+
+	// Credit:
+	// https://www.geeksforgeeks.org/inplace-rotate-square-matrix-by-90-degrees/
+	// Consider all squares one by one 
+    for (int x = 0; x < N / 2; x++) 
+    { 
+        // Consider elements in group of 4 in  
+        // current square 
+        for (int y = x; y < N-x-1; y++) 
+        { 
+            // store current cell in temp variable 
+            //unsigned char temp = mat[x][y]; 
+        	unsigned char temp0 = data[y * (rowsize) + (x*stepsize)];
+			unsigned char temp1 = data[y * (rowsize) + (x*stepsize) + 1];
+			unsigned char temp2 = data[y * (rowsize) + (x*stepsize) + 2];
+			//std::cerr << (int)temp0 << " ";
+			//unsigned char temp3 = data[y * (x*stepsize) + 3];
+  
+            // move values from right to top 
+            //mat[x][y] = mat[y][N-1-x]; 
+        	data[y * (rowsize) + (x*stepsize)]     = data[(N-1-x) * (rowsize) + ((y)*stepsize)];
+			data[y * (rowsize) + (x*stepsize) + 1] = data[(N-1-x) * (rowsize) + ((y)*stepsize) + 1];
+			data[y * (rowsize) + (x*stepsize) + 2] = data[(N-1-x) * (rowsize) + ((y)*stepsize) + 2];
+			//data[y * (x*stepsize) + 3] = data[(N-1-x) * ((y)*stepsize) + 3];
+  
+            // move values from bottom to right 
+            //mat[y][N-1-x] = mat[N-1-x][N-1-y]; 
+        	data[(N-1-x) * (rowsize) + ((y)*stepsize)]     = data[(N-1-y) * (rowsize) + ((N-1-x)*stepsize)];
+			data[(N-1-x) * (rowsize) + ((y)*stepsize) + 1] = data[(N-1-y) * (rowsize) + ((N-1-x)*stepsize) + 1];
+			data[(N-1-x) * (rowsize) + ((y)*stepsize) + 2] = data[(N-1-y) * (rowsize) + ((N-1-x)*stepsize) + 2];
+			//data[(N-1-x) * ((y)*stepsize) + 3] = data[(N-1-y) * ((N-1-x)*stepsize) + 3];
+ 
+            // move values from left to bottom 
+            //mat[N-1-x][N-1-y] = mat[N-1-y][x]; 
+  			data[(N-1-y) * (rowsize) + ((N-1-x)*stepsize)]     = data[(x) * (rowsize) + ((N-1-y)*stepsize)];
+			data[(N-1-y) * (rowsize) + ((N-1-x)*stepsize) + 1] = data[(x) * (rowsize) + ((N-1-y)*stepsize) + 1];
+			data[(N-1-y) * (rowsize) + ((N-1-x)*stepsize) + 2] = data[(x) * (rowsize) + ((N-1-y)*stepsize) + 2];
+			//data[(N-1-y) * ((N-1-x)*stepsize) + 3] = data[(x) * ((N-1-y)*stepsize) + 3];
+            // assign temp to left 
+            //mat[N-1-y][x] = temp; 
+  			data[(x) * (rowsize) + ((N-1-y)*stepsize)]     = temp0;
+			data[(x) * (rowsize) + ((N-1-y)*stepsize) + 1] = temp1;
+			data[(x) * (rowsize) + ((N-1-y)*stepsize) + 2] = temp2;
+			//data[(x) * ((N-1-y)*stepsize) + 3] = temp3;
+        } 
+    } 
+}
+
+bool TextureManager::readPNGdata(const std::string filename, bool adjustgamma, unsigned char *&data, png_uint_32 & width, png_uint_32 & height, GLint & format, int rotatenum) const
 {
 
 	FILE * f = fopen(filename.c_str(), "rb");
@@ -166,6 +240,8 @@ bool TextureManager::readPNGdata(const std::string filename, bool adjustgamma, u
 
 	data = new unsigned char[height * rowsize];
 
+
+
 	if (!data)
 		return false;
 
@@ -174,8 +250,14 @@ bool TextureManager::readPNGdata(const std::string filename, bool adjustgamma, u
 		memcpy(data + i * rowsize, row_pointers[height - i - 1], width * channels);
 	}
 
+	if (rotatenum > 0)
+		for (int i = 0; i < rotatenum; i++)
+			rotateonce(data, height, width, channels, rowsize);
+
 	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 	format = (colortype == PNG_COLOR_TYPE_RGB) ? GL_RGB : GL_RGBA;
+	if (format == GL_RGB) std::cerr << filename <<  " Texture RGB" << std::endl;
+	else if (format == GL_RGBA) std::cerr << filename << "Texture RGBA" << std::endl;
 	//for (int i = 0; i < 100; i++) std::cerr << data[i];
 	return true;
 }

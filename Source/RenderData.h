@@ -4,7 +4,7 @@
 #include "Particles.h"
 
 #ifndef MaxParticles
-#define MaxParticles 20000
+#define MaxParticles 60000
 #endif
 
 struct Skybox

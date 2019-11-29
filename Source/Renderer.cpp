@@ -24,7 +24,8 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 	glEnable(GL_DEPTH_TEST);
 	
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendFunc(GL_ONE, GL_ONE);
 
 	useAA = true;
 	AAcolorsamples = 4;
@@ -69,6 +70,7 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 	glBindBuffer(GL_ARRAY_BUFFER, vboquad);
 	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), quaddata, GL_STATIC_DRAW);
 	
+	std::string skyboxnum;
 
 	file.open(setupfile.c_str());
 	while (!file.eof())
@@ -116,14 +118,24 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 				return false;
 			}
 		}
+		else if (line.substr(0,6) == "Skybox"){
+			std::cerr << "SKYBOX: " << std::stoi(line.substr(7));
+			skyboxnum = line.substr(7);
+		}
 	}
 	file.close();
+
+	//std::string sky = "Skybox/";
+
+	std::vector<std::string> skybox1 = 	{"sky-" + skyboxnum + ".back.png","sky-" + skyboxnum + ".front.png","sky-" + skyboxnum + ".right.png",
+										 "sky-" + skyboxnum + ".left.png","sky-" + skyboxnum + ".up.png","sky-" + skyboxnum + ".down.png",};
+
 
 	std::vector<std::string> faces = {"rainbow_bk.png", "rainbow_ft.png" , "rainbow_lf.png",
 									   "rainbow_rt.png","rainbow_up.png",  "rainbow_dn.png"};
 
-	renderdata.loadSkybox(faces);
-	renderdata.loadBillboard("billboard.png");
+	renderdata.loadSkybox(skybox1);
+	renderdata.loadBillboard("dot.png");
 	renderdata.getParticles().loadParticles();
 	//std::cerr << "Skyboxid: " << renderdata.getSkybox().id << std::endl;
 	return true;
@@ -177,13 +189,16 @@ void Renderer::render()
 
 	glUseProgram(usershader.getProgram());
 	
-	//drawUserModelDepth();
+	drawUserModelDepth();
 	
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	//drawUserModel();
+	drawUserModel();
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glUseProgram(billboardshader.getProgram());
+	//std::cerr << ParticlesCount << std::endl;
 	drawBillboard(ParticlesCount);
 
 	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);

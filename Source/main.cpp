@@ -79,6 +79,12 @@ int main(int argc, char * argv[])
 			}
 			else if (event.type == SDL_KEYDOWN)
 			{
+				int key = event.key.keysym.sym;
+				if (key == SDLK_x) {
+					renderdata.getParticles().Explosion(Vector4(0.0f,0.0f,20.0f), 3000);
+					std::cerr << "Pressed X" << std::endl;
+				}
+
 				inputhandler.keyDown(event.key.keysym.sym);
 			}
 			else if (event.type == SDL_KEYUP)
@@ -104,6 +110,7 @@ int main(int argc, char * argv[])
 				if (!renderer.resize(event.resize.w, event.resize.h))
 					break;
 			}
+
 		}
 	}
 

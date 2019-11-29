@@ -10,6 +10,7 @@ Particles::Particles()
 }
 
 Particles::~Particles(){
+	//delete[] ParticlesContainer;
 }
 
 
@@ -27,7 +28,7 @@ void Particles::loadParticles(){
 	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
 	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
 
-
+	ParticlesContainer = new Particle[MaxParticles];
 
 	g_particle_position_size_data = new GLfloat[MaxParticles * 4];
 	g_particle_color_data = new GLubyte[MaxParticles * 4];
@@ -38,20 +39,64 @@ void Particles::loadParticles(){
 	}
 }
 
-int Particles::Update(float delta, Vector4 CameraPosition){
+int Particles::Explosion(Vector4 location, int NumParticles){
+	std::cerr << "Boom" << std::endl;
+
+	unsigned char r = rand() % 256;
+	unsigned char g = rand() % 256;
+	unsigned char b = rand() % 256;
+
+	for(int i = 0; i < NumParticles; i++){
+		int particleIndex = FindUnusedParticle();
+		ParticlesContainer[particleIndex].life =(rand()%1000)/1000.0f + 4.0f; // This particle will live 5 seconds.
+		ParticlesContainer[particleIndex].pos = location;
+		//std::cerr << i << " : " << particleIndex << std::endl;
+		float spread = 20.0f;
+		//Vector4 maindir = Vector4(0.0f, 0.0f, 30.0f);
+		// Very bad way to generate a random direction; 
+		// See for instance http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution instead,
+		// combined with some user-controlled parameters (main direction, spread, etc)
+		float radius = 1.0f;
+		Vector4 randomdir;
+		do{
+			randomdir = Vector4(
+				(rand()%2000 - 1000.0f)/1000.0f,
+				(rand()%2000 - 1000.0f)/1000.0f,
+				(rand()%2000 - 1000.0f)/1000.0f
+			);
+		} while(randomdir.length() > radius);
+
+		
+		ParticlesContainer[particleIndex].speed = randomdir*spread;
+
+
+		// Very bad way to generate a random color
+		ParticlesContainer[particleIndex].r = r;
+		ParticlesContainer[particleIndex].g = g;
+		ParticlesContainer[particleIndex].b = b;
+		ParticlesContainer[particleIndex].a = 200;
+
+		ParticlesContainer[particleIndex].size = (rand()%1000)/7000.0f + 0.3f;
+		
+	}
+
+
+}
+
+int Particles::Canon(int delta){
 	// Generate 10 new particule each millisecond,
 	// but limit this to 16 ms (60 fps), or if you have 1 long frame (1sec),
 	// newparticles will be huge and the next frame even longer.
-	std::cerr << delta << std::endl;
+	//std::cerr << delta << std::endl;
 	int newparticles = (int)(delta*1000.0);
 	if (newparticles > (int)(0.016f*10000.0))
 		newparticles = (int)(0.016f*10000.0);
-	
+	//std::cerr << "newp: " << newparticles << std::endl;
 	for(int i = 0; i < newparticles; i++){
 		int particleIndex = FindUnusedParticle();
-		ParticlesContainer[particleIndex].life = 5.0f; // This particle will live 5 seconds.
+		ParticlesContainer[particleIndex].life = (rand()%4000)/1000.0f + 1.0f; // This particle will live 5 seconds.
 		ParticlesContainer[particleIndex].pos = Vector4(0,0,0.0f,20.0f);
-
+		//std::cerr << i << " : " << particleIndex << std::endl;
 		float spread = 5.0f;
 		Vector4 maindir = Vector4(0.0f, 0.0f, 30.0f);
 		// Very bad way to generate a random direction; 
@@ -76,6 +121,10 @@ int Particles::Update(float delta, Vector4 CameraPosition){
 		
 	}
 
+}
+
+int Particles::Update(float delta, Vector4 CameraPosition){
+	
 
 
 	// Simulate all particles
@@ -132,14 +181,14 @@ int Particles::Update(float delta, Vector4 CameraPosition){
 int Particles::FindUnusedParticle(){
 
 	for(int i=LastUsedParticle; i<MaxParticles; i++){
-		if (ParticlesContainer[i].life < 0){
+		if (ParticlesContainer[i].life <= 0){
 			LastUsedParticle = i;
 			return i;
 		}
 	}
 
 	for(int i=0; i<LastUsedParticle; i++){
-		if (ParticlesContainer[i].life < 0){
+		if (ParticlesContainer[i].life <= 0){
 			LastUsedParticle = i;
 			return i;
 		}

@@ -20,6 +20,8 @@ bool RenderContext::create(int width, int height)
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
 	SDL_WM_SetCaption("ShaderLab", 0);
 
@@ -36,11 +38,12 @@ bool RenderContext::create(int width, int height)
 		return false;
 	}
 
-	if (!GLEW_VERSION_2_0)
+	if (!GLEW_VERSION_3_3)
 	{
-		std::cerr << "ShaderLab requires OpenGL 2.0 support!" << std::endl;
+		std::cerr << "ShaderLab requires OpenGL 3.3 support!" << std::endl;
 		return false;
 	}
+	std::cerr << "GLEW version: " << glewGetString(GLEW_VERSION) << std::endl;
 
 	return true;
 }

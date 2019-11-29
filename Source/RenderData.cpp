@@ -362,6 +362,10 @@ const Vector4 & RenderData::getCameraRotation()
 
 void RenderData::updateCamera(bool forward, bool backward, bool left, bool right, int turnright, int turndown, int deltatime)
 {
+	std::cerr << "right: " << turnright << std::endl;
+	std::cerr << "down: " << turndown << std::endl;
+
+
 	Vector4 dir = Vector4();
 	if (forward ^ backward)
 	{
@@ -379,9 +383,18 @@ void RenderData::updateCamera(bool forward, bool backward, bool left, bool right
 	}
 	if (dir.length() > 0.0f)
 		dir = dir.normalize() * ((float)deltatime * 0.025f);
-
+	std::cerr << "pre x: " << cameraposition.x() << " y: " << cameraposition.y() << " z: " << cameraposition.z() << std::endl;
+	//cameraposition = cameraposition.rotateX(turndown * 0.1f);
+	cameraposition = cameraposition.rotateZ(-1 * turnright * 0.01f);
+	//cameraposition = cameraposition.rotateZ(-1 * turnright * 0.01f);
+	std::cerr << "post x: " << cameraposition.x() << " y: " << cameraposition.y() << " z: " << cameraposition.z() << std::endl;
+	//camerarotation = camerarotation.normalize();
+	
+	std::cerr << "rotpre x: " << camerarotation.x() << " y: " << camerarotation.y() << " z: " << camerarotation.z() << std::endl;
+	//cameraposition = cameraposition.rotateX(turndown * 0.1f);
 	camerarotation.z() -= (float)turnright * 0.01f;
-	camerarotation.y() -= (float)turndown * 0.01f;
+	std::cerr << "rotpost x: " << camerarotation.x() << " y: " << camerarotation.y() << " z: " << camerarotation.z() << std::endl;
+	//camerarotation.y() -= (float)turndown * 0.01f;
 	if (camerarotation.y() >= M_PI_2)
 		camerarotation.y() = (float)M_PI_2 - 0.0001f;
 	if (camerarotation.y() <= -M_PI_2)
@@ -391,11 +404,11 @@ void RenderData::updateCamera(bool forward, bool backward, bool left, bool right
 	if (camerarotation.z() < M_PI)
 		camerarotation.z() += (float)M_PI * 2.0f;
 
-	cameraposition = cameraposition.rotate(Vector4(0, 0, -(float)turnright * 0.01f));
-	cameraposition = cameraposition.rotate(Vector4(-(float)turndown * 0.01f, 0 	, 0));
+	//cameraposition = cameraposition.rotate(Vector4(0, 0, -(float)turnright * 0.01f));
+	//cameraposition = cameraposition.rotate(Vector4(-(float)turndown * 0.01f, 0 	, 0));
 	//cameraposition = cameraposition.rotate(Vector4(0, 0, -(float)turnright * 0.01f));
 	
-	cameraposition += dir.rotate(camerarotation);
+	//cameraposition += dir.rotate(camerarotation);
 }
 
 
