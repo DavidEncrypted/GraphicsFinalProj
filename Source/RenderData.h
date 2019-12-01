@@ -2,6 +2,7 @@
 #include "TextureManager.h"
 
 #include "Particles.h"
+#include "FireworkController.h"
 
 #ifndef MaxParticles
 #define MaxParticles 60000
@@ -14,7 +15,7 @@ struct Skybox
 
 struct Billboard
 {
-	GLuint textureid, vao, vbo;
+	GLuint textureid, smokeid, vao, vbo;
 };
 
 struct Material
@@ -48,9 +49,11 @@ public:
 
 	bool loadSkybox(const std::vector<std::string> & facefilenames);
 
-	bool loadBillboard(const std::string & texturename);
+	bool loadBillboard(const std::string & texturename, const std::string & smoketexturename);
 
 	bool loadModel(const std::string & modelfile);
+
+	bool loadFireworkController();
 
 	bool addLight(const std::string & description);
 
@@ -61,6 +64,8 @@ public:
 	Billboard & getBillboard() {return bb;}
 
 	Particles & getParticles() {return particles;}
+
+	FireworkController & getFireworkController() {return fc;}
 
 	size_t getNumMeshes() const;
 	Mesh & getMesh(size_t i);
@@ -81,6 +86,7 @@ private:
 	Particles particles;
 	Skybox sb;
 	Billboard bb;
+	FireworkController fc;
 
 	std::vector<Mesh> meshes;
 	std::vector<Material> materials;

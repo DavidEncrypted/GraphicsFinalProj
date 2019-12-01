@@ -1,13 +1,13 @@
 #include "global.h"
 #include "RenderData.h"
 
-RenderData::RenderData() : cameraposition(1.0f, 0.0f, 0.0f), camerarotation((float)M_PI, 0.0f, 0.0f)
+RenderData::RenderData() : cameraposition(1.0f, 0.0f, 0.0f), camerarotation((float)M_PI, 0.0f, 0.0f) 
 {}
 
 
 
 bool RenderData::loadSkybox(const std::vector<std::string> & facefilenames){
-	sb = Skybox();
+	//sb = Skybox();
 	sb.id = texturemanager.loadCubemap(facefilenames);
 
 	const float skyboxVertices[] = {
@@ -69,12 +69,14 @@ bool RenderData::loadSkybox(const std::vector<std::string> & facefilenames){
 	return true;
 }
 
-bool RenderData::loadBillboard(const std::string & texturename){
+bool RenderData::loadBillboard(const std::string & texturename, const std::string & smoketexturename){
 	bb = Billboard();
 	GLuint texid = texturemanager.loadTexture("Models/Textures/" + texturename, false);
 	std::cerr << "Loaded texid: " << texid << std::endl;
 	bb.textureid = texid;
-
+	GLuint smokeid = texturemanager.loadTexture("Models/Textures/" + smoketexturename, false);
+	std::cerr << "Loaded texid: " << smokeid << std::endl;
+	bb.smokeid = smokeid;
 
 	// The VBO containing the 4 vertices of the particles.
 	static const GLfloat g_vertex_buffer_data[] = { 
@@ -92,10 +94,32 @@ bool RenderData::loadBillboard(const std::string & texturename){
 
 
 
-	particles = Particles();
+	//particles = Particles();
 	//particles.printparticles();
 
 	return true;
+}
+
+bool RenderData::loadFireworkController(){
+	//fc = FireworkController(&particles);
+	fc.AttachParticles(&particles);
+
+	// fc.AddFireworkTrigger(7.0f,  1, 0  , 0  , 255);
+	// fc.AddFireworkTrigger(8.0f,  1, 255, 0  , 0);
+	// fc.AddFireworkTrigger(10.0f, 1, 0  , 0  , 255);
+	// fc.AddFireworkTrigger(11.0f, 1, 0  , 0  , 255);
+	// fc.AddFireworkTrigger(12.0f, 1, 0  , 0  , 255);
+	// fc.AddFireworkTrigger(13.0f, 1, 0  , 255, 0);
+	// fc.AddFireworkTrigger(18.0f, 2, 255,0   , 0);
+	for (int i = 0; i < 5; i++){
+		fc.SetOrigin(Vector4(0.0f, -100.0f + (float)i*40.0f,-40.0f));
+		fc.AddFireworkTrigger(5.0f + (float)i/5.0f, 4, 255 - (i*20), 0, (i*20));
+	}
+	fc.SetOrigin(Vector4(0.0f, 0.0f,-40.0f));
+	fc.AddFireworkTrigger(9.0f, 2, 255,0, 0);
+	//fc.AddFireworkTrail(Vector4(0.0f,0.0f,-40.0f), Vector4(0.1f,0.1f,1.0f), 0.4f, 3.0f, 1, 255,0,0);
+
+
 }
 
 bool RenderData::loadModel(const std::string & modelfile)
@@ -362,8 +386,8 @@ const Vector4 & RenderData::getCameraRotation()
 
 void RenderData::updateCamera(bool forward, bool backward, bool left, bool right, int turnright, int turndown, int deltatime)
 {
-	std::cerr << "right: " << turnright << std::endl;
-	std::cerr << "down: " << turndown << std::endl;
+	//std::cerr << "right: " << turnright << std::endl;
+	//std::cerr << "down: " << turndown << std::endl;
 
 
 	Vector4 dir = Vector4();
@@ -383,17 +407,17 @@ void RenderData::updateCamera(bool forward, bool backward, bool left, bool right
 	}
 	if (dir.length() > 0.0f)
 		dir = dir.normalize() * ((float)deltatime * 0.025f);
-	std::cerr << "pre x: " << cameraposition.x() << " y: " << cameraposition.y() << " z: " << cameraposition.z() << std::endl;
+	//std::cerr << "pre x: " << cameraposition.x() << " y: " << cameraposition.y() << " z: " << cameraposition.z() << std::endl;
 	//cameraposition = cameraposition.rotateX(turndown * 0.1f);
 	cameraposition = cameraposition.rotateZ(-1 * turnright * 0.01f);
 	//cameraposition = cameraposition.rotateZ(-1 * turnright * 0.01f);
-	std::cerr << "post x: " << cameraposition.x() << " y: " << cameraposition.y() << " z: " << cameraposition.z() << std::endl;
+	//std::cerr << "post x: " << cameraposition.x() << " y: " << cameraposition.y() << " z: " << cameraposition.z() << std::endl;
 	//camerarotation = camerarotation.normalize();
 	
-	std::cerr << "rotpre x: " << camerarotation.x() << " y: " << camerarotation.y() << " z: " << camerarotation.z() << std::endl;
+	//std::cerr << "rotpre x: " << camerarotation.x() << " y: " << camerarotation.y() << " z: " << camerarotation.z() << std::endl;
 	//cameraposition = cameraposition.rotateX(turndown * 0.1f);
 	camerarotation.z() -= (float)turnright * 0.01f;
-	std::cerr << "rotpost x: " << camerarotation.x() << " y: " << camerarotation.y() << " z: " << camerarotation.z() << std::endl;
+	//std::cerr << "rotpost x: " << camerarotation.x() << " y: " << camerarotation.y() << " z: " << camerarotation.z() << std::endl;
 	//camerarotation.y() -= (float)turndown * 0.01f;
 	if (camerarotation.y() >= M_PI_2)
 		camerarotation.y() = (float)M_PI_2 - 0.0001f;
@@ -408,7 +432,7 @@ void RenderData::updateCamera(bool forward, bool backward, bool left, bool right
 	//cameraposition = cameraposition.rotate(Vector4(-(float)turndown * 0.01f, 0 	, 0));
 	//cameraposition = cameraposition.rotate(Vector4(0, 0, -(float)turnright * 0.01f));
 	
-	//cameraposition += dir.rotate(camerarotation);
+	cameraposition += dir.rotate(camerarotation);
 }
 
 

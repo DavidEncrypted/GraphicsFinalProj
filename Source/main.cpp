@@ -81,9 +81,18 @@ int main(int argc, char * argv[])
 			{
 				int key = event.key.keysym.sym;
 				if (key == SDLK_x) {
-					renderdata.getParticles().Explosion(Vector4(0.0f,0.0f,20.0f), 3000);
+					renderdata.getParticles().Explosion(Vector4(0.0f,0.0f,20.0f), 3000, 1, 255, 0, 0);
 					std::cerr << "Pressed X" << std::endl;
 				}
+				else if(key == SDLK_t){
+					renderdata.getParticles().Trail(Vector4(0.0f,0.0f,20.0f), Vector4(0.0f,0.0f,-1.0f), 30, 255, 255, 200);
+					std::cerr << "Pressed T" << std::endl;	
+				}
+				else if(key == SDLK_c){
+					renderdata.getParticles().SmokeCloud(Vector4(0.0f,0.0f,20.0f), 200, 0.1f);
+					std::cerr << "Pressed C" << std::endl;	
+				}
+				
 
 				inputhandler.keyDown(event.key.keysym.sym);
 			}

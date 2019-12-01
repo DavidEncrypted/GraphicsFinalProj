@@ -24,8 +24,8 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 	glEnable(GL_DEPTH_TEST);
 	
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glBlendFunc(GL_ONE, GL_ONE);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_ONE, GL_ONE);
 
 	useAA = true;
 	AAcolorsamples = 4;
@@ -135,8 +135,10 @@ bool Renderer::initRenderer(int rendersizex, int rendersizey, const std::string 
 									   "rainbow_rt.png","rainbow_up.png",  "rainbow_dn.png"};
 
 	renderdata.loadSkybox(skybox1);
-	renderdata.loadBillboard("dot.png");
+	renderdata.loadBillboard("dot.png", "Black/blackSmoke00.png");
 	renderdata.getParticles().loadParticles();
+	renderdata.loadFireworkController();
+	
 	//std::cerr << "Skyboxid: " << renderdata.getSkybox().id << std::endl;
 	return true;
 }
@@ -180,6 +182,7 @@ void Renderer::render()
 
 	int ParticlesCount = renderdata.getParticles().Update(delta,cameraposition);
 
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, fboms);
 
 	
@@ -187,28 +190,39 @@ void Renderer::render()
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
 
-	glUseProgram(usershader.getProgram());
+	//glUseProgram(usershader.getProgram());
 	
-	drawUserModelDepth();
+	//drawUserModelDepth();
 	
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	drawUserModel();
+	//drawUserModel();
 	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//
+	renderdata.getFireworkController().UpdateTime(delta); 
 
-	glUseProgram(billboardshader.getProgram());
+	//
+	//
 	//std::cerr << ParticlesCount << std::endl;
-	drawBillboard(ParticlesCount);
+	//
+	
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 
-	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	
-	//glDisable(GL_DEPTH_TEST);
-	
+	//glClear(GL_DEPTH_BUFFER_BIT);
+
 	glUseProgram(skyboxshader.getProgram());
 	
 	drawSkybox();
+
+	glUseProgram(billboardshader.getProgram());
+
+	drawBillboard(ParticlesCount);
+
 	
+	// //glDisable(GL_DEPTH_TEST);
+	//glClear(GL_DEPTH_BUFFER_BIT);
+
 	//glEnable(GL_DEPTH_TEST);
 
 	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -268,14 +282,21 @@ void Renderer::drawBillboard(int ParticlesCount){
 	glUniformMatrix4fv(glGetUniformLocation(billboardshader.getProgram(), "matprojection"), 1, GL_TRUE, matprojection.elements());
 	
 	GLuint id = renderdata.getBillboard().textureid;
+	GLuint smokeid = renderdata.getBillboard().smokeid;
 
 
 	// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, id);
 	// Set our "myTextureSampler" sampler to use Texture Unit 0
-	glUniform1i(glGetUniformLocation(billboardshader.getProgram(), "billboardTextureSampler"), 0);
-	// This is the only interesting part of the tutorial.
+	//glUniform1i(glGetUniformLocation(billboardshader.getProgram(), "billboardTextureSampler"), 7);
+
+	// Bind our texture in Texture Unit 0
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, smokeid);
+	// Set our "myTextureSampler" sampler to use Texture Unit 0
+	//glUniform1i(glGetUniformLocation(billboardshader.getProgram(), "smokeTextureSampler"), 6);
+	// // // This is the only interesting part of the tutorial.
 	// This is equivalent to mlutiplying (1,0,0) and (0,1,0) by inverse(ViewMatrix).
 	// ViewMatrix is orthogonal (it was made this way), 
 	// so its inverse is also its transpose, 
@@ -337,11 +358,18 @@ void Renderer::drawBillboard(int ParticlesCount){
 
 	glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, ParticlesCount);
 
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
 
-
+	glActiveTexture(GL_TEXTURE0);
 }
 
 void Renderer::drawSkybox(){
@@ -351,8 +379,9 @@ void Renderer::drawSkybox(){
 	// ... set view and projection matrix
 	glUniformMatrix4fv(glGetUniformLocation(skyboxshader.getProgram(), "matmodelview"), 1, GL_TRUE, rotmodelview.elements());
 	glUniformMatrix4fv(glGetUniformLocation(skyboxshader.getProgram(), "matprojection"), 1, GL_TRUE, matprojection.elements());
-	
-	
+	glUniform3f(glGetUniformLocation(skyboxshader.getProgram(), "colorfix"), 0.1f,0.2f,0.2f);
+	//glUniform3f(glGetUniformLocation(skyboxshader.getProgram(), "colorfix"), upvector.x(), upvector.y(), upvector.z());
+	glActiveTexture(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glEnableVertexAttribArray(0);
 
@@ -371,6 +400,7 @@ void Renderer::drawSkybox(){
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 	
 
