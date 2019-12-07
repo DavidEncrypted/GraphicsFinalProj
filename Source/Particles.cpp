@@ -11,6 +11,7 @@ Particles::Particles()
 
 Particles::~Particles(){
 	//delete[] ParticlesContainer;
+	//if (LightPositions != nullptr) delete LightPositions;
 }
 
 
@@ -33,12 +34,38 @@ void Particles::loadParticles(){
 	g_particle_position_size_data = new GLfloat[MaxParticles * 4];
 	g_particle_color_data = new GLubyte[MaxParticles * 4];
 
+	LightPositions = new GLfloat[40];
+	LightIntensities = new GLfloat[40];
+
+	for (int i=0; i < 40; i++){
+		LightPositions[i] = 0.0f;
+		LightIntensities[i] = 0.0f;
+	}
+
 	for(int i=0; i<MaxParticles; i++){
 		ParticlesContainer[i].life = -1.0f;
 		ParticlesContainer[i].cameradistance = -1.0f;
 		ParticlesContainer[i].hastrail = 0;
 		ParticlesContainer[i].type = 0;
 			
+	}
+}
+
+void Particles::AddLightFlash(Vector4 loc, unsigned char r, unsigned char g, unsigned char b){
+	for (int i = 0; i < 10; i++){
+		int numempty = 0;
+		for (int j = 0; j < 3; j++){
+			if (LightIntensities[i*4+j] == 0.0f) numempty++;
+		}
+		if (numempty == 3){
+			LightIntensities[i*4] = (float)r / 255.0f;
+			LightIntensities[i*4 + 1] = (float)g / 255.0f;
+			LightIntensities[i*4 + 2] = (float)b / 255.0f;
+			LightPositions[i*4] = loc.x();
+			LightPositions[i*4 + 1] = loc.y();
+			LightPositions[i*4 + 2] = loc.z();
+			break;
+		}
 	}
 }
 
@@ -70,12 +97,13 @@ void Particles::Trail(Vector4 loc, Vector4 dir, int NumParticles, int _r, int _g
 		ParticlesContainer[particleIndex].size = (rand()%1000)/7000.0f + 0.3f;
 		
 	}
+	//SmokeCloud(loc, 8, 5.0f);
 }
 
 void Particles::SmokeCloud(Vector4 location, int NumParticles, float cloudsize){
 	for(int i = 0; i < NumParticles; i++){
 		int particleIndex = FindUnusedParticle();
-		ParticlesContainer[particleIndex].life =(rand()%1000)/1000.0f + 40.0f; // This particle will live 5 seconds.
+		ParticlesContainer[particleIndex].life =(rand()%1000)/1000.0f + 20.0f; // This particle will live 5 seconds.
 		Vector4 randomloc;
 
 		do{
@@ -129,7 +157,7 @@ void Particles::Explosion(Vector4 location, int NumParticles, int type, int _r, 
 
 		Vector4 randomdir;
 		
-		if (type == 1 || type == 3 || type == 4){
+		if (type == 1 || type == 3 || type == 4 || type == 5){
 			do{
 				randomdir = Vector4(
 					(rand()%2000 - 1000.0f)/1000.0f,
@@ -158,6 +186,9 @@ void Particles::Explosion(Vector4 location, int NumParticles, int type, int _r, 
 			ParticlesContainer[particleIndex].hastrail = 3;
 			ParticlesContainer[particleIndex].type = 1;
 		}
+		else if (type == 5){
+			spread = 60.0f;
+		}
 
 		
 		ParticlesContainer[particleIndex].speed = randomdir*spread;
@@ -173,6 +204,8 @@ void Particles::Explosion(Vector4 location, int NumParticles, int type, int _r, 
 		
 	}
 	SmokeCloud(location, 100, 25.0f);
+	AddLightFlash(location, r,g,b);
+	
 }
 
 void Particles::Canon(int delta){
@@ -241,16 +274,16 @@ int Particles::Update(float delta, Vector4 CameraPosition){
 		Particle& p = ParticlesContainer[i]; // shortcut
 		if(p.life > 0.0f && p.a == 0){
 			if (p.hastrail > 0) {CreateTrailParticle(p);}
-			if (p.type != 0 && p.life <= 1.0f){
-				p.r += 10;
-				if (p.r > 255) p.r = 255;
-				p.g += 10;
-				if (p.g > 255) p.g = 255;
-				p.b += 10;
-				if (p.b > 255) p.b = 255;
-				if (p.r == 255 && p.g == 255 && p.b == 255)
-					p.type = 0;
-			}
+			// if (p.type != 0 && p.life <= 1.0f){
+			// 	p.r += 10;
+			// 	if (p.r > 255) p.r = 255;
+			// 	p.g += 10;
+			// 	if (p.g > 255) p.g = 255;
+			// 	p.b += 10;
+			// 	if (p.b > 255) p.b = 255;
+			// 	if (p.r == 255 && p.g == 255 && p.b == 255)
+			// 		p.type = 0;
+			// }
 		}
 	}
 
@@ -266,15 +299,14 @@ int Particles::Update(float delta, Vector4 CameraPosition){
 			// Decrease life
 			p.life -= delta;
 			if (p.life > 0.0f){
-				
-
 				if (p.a == 0){
 					// Simulate simple physics : gravity only, no collisions
 					p.speed += Vector4(0.0f,0.0f, -9.81f) * (float)delta * 0.5f;
 				}
 				else {
-					p.speed *= 0.95f;
-					p.pos += Vector4(0.0f, -3.0f, 0.0f) * (float)delta;
+					p.speed *= 0.97f;
+					float randval = (rand()%1000) / 4000.0f;
+					p.pos += Vector4(0.0f, -3.0f + randval, 4.0f + randval) * (float)delta;
 				}
 				p.pos += p.speed * (float)delta;
 				p.cameradistance = (p.pos - CameraPosition ).length();
@@ -304,6 +336,15 @@ int Particles::Update(float delta, Vector4 CameraPosition){
 	}
 
 	SortParticles();
+
+	
+	for (int i = 0; i < 10; i++){
+		for (int j = 0; j < 3; j++){ // RGB no A
+			LightIntensities[i*4+j] -= 0.1f;
+			if (LightIntensities[i*4+j] < 0.0f) LightIntensities[i*4+j] = 0.0f;
+		}
+	}
+
 
 	return ParticlesCount;
 }

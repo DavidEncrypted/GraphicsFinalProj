@@ -18,6 +18,12 @@ struct Particle{
 	}
 };
 
+struct ParticleLight
+{
+	Vector4 position;
+	Vector4 intensity;
+};
+
 
 
 class Particles
@@ -29,12 +35,16 @@ public:
 	int FindUnusedParticle();
 	void SortParticles();
 
+	void AddLightFlash(Vector4 loc, unsigned char r, unsigned char g, unsigned char b);
 	void SmokeCloud(Vector4 location, int NumParticles, float cloudsize);
 	void Trail(Vector4 loc, Vector4 dir, int NumParticles, int _r, int _g, int _b);
 	void Explosion(Vector4 location, int NumParticles, int type, int _r, int _g, int _b);
 	void Canon(int delta);
 	int Update(float delta, Vector4 CameraPosition);
 	void CreateTrailParticle(Particle& p);
+
+	GLfloat* getLightPositions() {return LightPositions;}
+	GLfloat* getLightIntensities() {return LightIntensities;}
 
 	GLuint getPositionVBO(){return particles_position_buffer;}
 	GLuint getColorVBO(){return particles_color_buffer;}
@@ -52,7 +62,11 @@ private:
 	GLfloat* g_particle_position_size_data;
 	GLubyte* g_particle_color_data;
 
+	GLfloat* LightPositions;
+	GLfloat* LightIntensities;
+
 	Particle* ParticlesContainer;
 	int LastUsedParticle = 0;
-	
+
+	std::vector<ParticleLight> LightContainer;
 };

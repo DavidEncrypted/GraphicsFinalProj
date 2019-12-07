@@ -101,25 +101,38 @@ bool RenderData::loadBillboard(const std::string & texturename, const std::strin
 }
 
 bool RenderData::loadFireworkController(){
-	//fc = FireworkController(&particles);
 	fc.AttachParticles(&particles);
-
-	// fc.AddFireworkTrigger(7.0f,  1, 0  , 0  , 255);
-	// fc.AddFireworkTrigger(8.0f,  1, 255, 0  , 0);
-	// fc.AddFireworkTrigger(10.0f, 1, 0  , 0  , 255);
-	// fc.AddFireworkTrigger(11.0f, 1, 0  , 0  , 255);
-	// fc.AddFireworkTrigger(12.0f, 1, 0  , 0  , 255);
-	// fc.AddFireworkTrigger(13.0f, 1, 0  , 255, 0);
-	// fc.AddFireworkTrigger(18.0f, 2, 255,0   , 0);
-	for (int i = 0; i < 5; i++){
-		fc.SetOrigin(Vector4(0.0f, -100.0f + (float)i*40.0f,-40.0f));
-		fc.AddFireworkTrigger(5.0f + (float)i/5.0f, 4, 255 - (i*20), 0, (i*20));
-	}
 	fc.SetOrigin(Vector4(0.0f, 0.0f,-40.0f));
-	fc.AddFireworkTrigger(9.0f, 2, 255,0, 0);
-	//fc.AddFireworkTrail(Vector4(0.0f,0.0f,-40.0f), Vector4(0.1f,0.1f,1.0f), 0.4f, 3.0f, 1, 255,0,0);
+	float z = 0.3f;
+	for (int i = 0; i < 10; i++){
 
+		//
+		fc.SetDirection(Vector4(0.0f,1.0f - (i/5.0f),z).normalize());
+		fc.AddFireworkTrigger(5.0f + ((float)i/3.0f), 0.7f, 1, 255 - (i*25), (i*25), (i*25));
+		if (i <= 5) z += 0.07;
+		else z -= 0.08;
+	}
+	fc.SetDirection(Vector4(0.0f,0.0f,1.0f).normalize());
+	fc.AddFireworkTrigger(15.0f, 0.7f, 2, 0,0,255);
+	fc.AddFireworkTrigger(18.0f, 0.7f, 3, 0,255,0);
 
+	for (int i = 0; i < 6; i++){
+		fc.SetOrigin(Vector4(0.0f, -90.0f + (float)i*30.0f,-60.0f));
+		fc.AddFireworkTrigger(22.0f, 0.7f, 3, 0,255,0);
+	}
+	for (int i = 0; i < 6; i++){
+		fc.SetOrigin(Vector4(0.0f, -90.0f + (float)i*30.0f,-60.0f));
+		fc.AddFireworkTrigger(24.0f, 0.7f, 3, 255,0,0);
+	}
+	for (int i = 0; i < 6; i++){
+		fc.SetOrigin(Vector4(0.0f, -90.0f + (float)i*30.0f,-60.0f));
+		fc.AddFireworkTrigger(26.0f, 0.7f, 3, 0,0,255);
+	}
+
+	fc.SetOrigin(Vector4(0.0f, 0.0f,-60.0f));
+	fc.AddFireworkTrigger(30.0f, 3.2f, 1.1f, 3000, 5, 255, 10, 10);
+	fc.AddFireworkTrigger(30.0f, 3.2f, 1.1f, 3000, 5, 10, 10, 255);
+	
 }
 
 bool RenderData::loadModel(const std::string & modelfile)

@@ -190,7 +190,7 @@ void Renderer::render()
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
 
-	//glUseProgram(usershader.getProgram());
+	glUseProgram(usershader.getProgram());
 	
 	//drawUserModelDepth();
 	
@@ -349,10 +349,35 @@ void Renderer::drawBillboard(int ParticlesCount){
 		(void*)0                          // array buffer offset
 	);
 
-
 	glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
 	glVertexAttribDivisor(1, 1); // positions : one per quad (its center)                 -> 1
 	glVertexAttribDivisor(2, 1); // color : one per quad                                  -> 1
+
+	// GLfloat *posarray = new GLfloat[40];
+	// GLfloat *intensityarray = new GLfloat[40];
+
+	// for (int i = 0; i < 40; i++){
+	// 	posarray[i] = 0.0f;
+	// 	intensityarray[i] = 0.0f;
+	// }
+	// // light 0: 0.0f,0.0f,0.0f,0.0f
+	
+	// // light 1: 0.0f,50.0f,0.0f,0.0f
+	// posarray[5] = -80.0f;
+	
+	// // 0,1,2,3 = 1.0f,0.0f,0.0f,0.0f
+	// intensityarray[0] = 1.0f;
+
+	// // 4,5,6,7 = 0.0f,1.0f,0.0f,0.0f
+	// intensityarray[5] = 1.0f;
+	
+
+
+	glUniform4fv(glGetUniformLocation(billboardshader.getProgram(), 
+		"light_position"), 10, par.getLightPositions());
+	glUniform4fv(glGetUniformLocation(billboardshader.getProgram(), 
+		"light_intensity"), 10, par.getLightIntensities());
+
 
 
 
